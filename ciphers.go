@@ -330,7 +330,7 @@ func (ctx *encryptionCipherCtx) EncryptFinalEx() ([]byte, []byte, error) {
 	if 1 != C.EVP_EncryptFinal_ex(ctx.ctx, (*C.uchar)(&outbuf[0]), &outlen) {
 		return nil, nil, errors.New("encryption failed")
 	}
-	workingiv := C.GoBytes(unsafe.Pointer(ctx.ctx.iv[0]), C.int(ctx.cipherCtx.IVSize()))
+	workingiv := C.GoBytes(unsafe.Pointer(&ctx.ctx.iv[0]), C.int(ctx.cipherCtx.IVSize()))
 	return outbuf[:outlen], workingiv, nil
 }
 
@@ -354,7 +354,7 @@ func (ctx *decryptionCipherCtx) DecryptFinalEx() ([]byte, []byte, error) {
 		return nil, nil, errors.New("decryption failed")
 	}
 
-	workingiv := C.GoBytes(unsafe.Pointer(ctx.ctx.iv[0]), C.int(ctx.cipherCtx.IVSize()))
+	workingiv := C.GoBytes(unsafe.Pointer(&ctx.ctx.iv[0]), C.int(ctx.cipherCtx.IVSize()))
 	return outbuf[:outlen], workingiv, nil
 }
 
