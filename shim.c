@@ -262,6 +262,10 @@ int X_EVP_CIPHER_CTX_encrypting(const EVP_CIPHER_CTX *ctx) {
 	return ctx->encrypt;
 }
 
+int EVP_CIPHER_CTX_iv(const EVP_CIPHER_CTX *ctx) {
+    return ctx->iv;
+}
+
 HMAC_CTX *X_HMAC_CTX_new(void) {
 	/* v1.1.0 uses a OPENSSL_zalloc to allocate the memory which does not exist
 	 * in previous versions. malloc+memset to get the same behavior */
@@ -662,6 +666,10 @@ int X_EVP_CIPHER_CTX_key_length(EVP_CIPHER_CTX *ctx) {
 
 int X_EVP_CIPHER_CTX_iv_length(EVP_CIPHER_CTX *ctx) {
     return EVP_CIPHER_CTX_iv_length(ctx);
+}
+
+const unsigned char *X_EVP_CIPHER_CTX_iv(const EVP_CIPHER_CTX *ctx) {
+    return EVP_CIPHER_CTX_iv(ctx);
 }
 
 const EVP_CIPHER *X_EVP_CIPHER_CTX_cipher(EVP_CIPHER_CTX *ctx) {

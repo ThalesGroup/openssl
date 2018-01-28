@@ -326,12 +326,13 @@ func TestNonAuthenticatedEncryptionAndReturnWorkingIV(t *testing.T) {
 		t.Fatal("EncryptUpdate(plaintext1) failure: ", err)
 	}
 	ciphertext = append(ciphertext, cipherbytes1...)
-	cipherbytes1, wiv, err := eCtx.EncryptFinalEx()
+	cipherbytes1, err = eCtx.EncryptFinal()
+	wiv := eCtx.IV()
 	if err != nil {
 		t.Fatal("EncryptFinal() failure: ", err)
-	}	
+	}
 	ciphertext = append(ciphertext, cipherbytes1...)
-	
+
 	// Encrypt next block
 	eCtx2, err := NewEncryptionCipherCtx(cipher, nil, key, wiv)
 	//eCtx2.SetPadding(0)
@@ -345,25 +346,26 @@ func TestNonAuthenticatedEncryptionAndReturnWorkingIV(t *testing.T) {
 		t.Fatal("EncryptFinal() failure: ", err)
 	}
 	ciphertext = append(ciphertext, cipherbytes2...)
-	
+
 	// Decrypt
 	dCtx, err := NewDecryptionCipherCtx(cipher, nil, key, iv)
 	if err != nil {
 		t.Fatal("Could not create decryption context: ", err)
 	}
 	//dCtx.SetPadding(0)
-	// If padding is on, 
+	// If padding is on,
 	plainbytes1, err := dCtx.DecryptUpdate(ciphertext[:48])
 	if err != nil {
 		t.Fatal("DecryptUpdate(ciphertext part 1) failure: ", err)
 	}
 	plainOutput := string(plainbytes1)
-	plainbytes1, wiv, err = dCtx.DecryptFinalEx()
+	plainbytes1, err = dCtx.DecryptFinal()
+	wiv = dCtx.IV()
 	if err != nil {
 		t.Fatal("DecryptFinal() failure: ", err)
 	}
 	plainOutput += string(plainbytes1)
-	
+
 	// Decrypt next block
 	dCtx2, err := NewDecryptionCipherCtx(cipher, nil, key, wiv)
 	//dCtx2.SetPadding(0)

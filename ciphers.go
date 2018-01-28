@@ -33,6 +33,7 @@ type CipherCtx interface {
 	BlockSize() int
 	KeySize() int
 	IVSize() int
+	IV() []byte
 }
 
 type Cipher struct {
@@ -148,6 +149,10 @@ func (ctx *cipherCtx) IVSize() int {
 	return int(C.X_EVP_CIPHER_CTX_iv_length(ctx.ctx))
 }
 
+func (ctx *cipherCtx) IV() []byte {
+	return C.GoBytes(unsafe.Pointer(C.X_EVP_CIPHER_CTX_iv(ctx.ctx)), C.X_EVP_CIPHER_CTX_iv_length(ctx.ctx))
+}
+
 func (ctx *cipherCtx) setCtrl(code, arg int) error {
 	res := C.EVP_CIPHER_CTX_ctrl(ctx.ctx, C.int(code), C.int(arg), nil)
 	if res != 1 {
@@ -203,11 +208,6 @@ type EncryptionCipherCtx interface {
 	// or extra padding information
 	EncryptFinal() ([]byte, error)
 
-	// call after all plaintext has been passed in; may return
-	// additional ciphertext if needed to finish off a block
-	// or extra padding information. Returns last working iv.
-	EncryptFinalEx() ([]byte, []byte, error)
-
 }
 
 type DecryptionCipherCtx interface {
@@ -223,10 +223,6 @@ type DecryptionCipherCtx interface {
 	// additional plaintext if needed to finish off a block
 	DecryptFinal() ([]byte, error)
 
-	// call after all ciphertext has been passed in; may return
-	// additional plaintext if needed to finish off a block.
-	// Returns last working iv
-	DecryptFinalEx() ([]byte, []byte, error)
 }
 
 type encryptionCipherCtx struct {
@@ -324,16 +320,6 @@ func (ctx *encryptionCipherCtx) EncryptFinal() ([]byte, error) {
 	return outbuf[:outlen], nil
 }
 
-func (ctx *encryptionCipherCtx) EncryptFinalEx() ([]byte, []byte, error) {
-	outbuf := make([]byte, ctx.BlockSize())
-	var outlen C.int
-	if 1 != C.EVP_EncryptFinal_ex(ctx.ctx, (*C.uchar)(&outbuf[0]), &outlen) {
-		return nil, nil, errors.New("encryption failed")
-	}
-	workingiv := C.GoBytes(unsafe.Pointer(&ctx.ctx.iv[0]), C.int(ctx.cipherCtx.IVSize()))
-	return outbuf[:outlen], workingiv, nil
-}
-
 func (ctx *decryptionCipherCtx) DecryptFinal() ([]byte, error) {
 	outbuf := make([]byte, ctx.BlockSize())
 	var outlen C.int
@@ -343,19 +329,6 @@ func (ctx *decryptionCipherCtx) DecryptFinal() ([]byte, error) {
 		return nil, errors.New("decryption failed")
 	}
 	return outbuf[:outlen], nil
-}
-
-func (ctx *decryptionCipherCtx) DecryptFinalEx() ([]byte, []byte, error) {
-	outbuf := make([]byte, ctx.BlockSize())
-	var outlen C.int
-	if 1 != C.EVP_DecryptFinal_ex(ctx.ctx, (*C.uchar)(&outbuf[0]), &outlen) {
-		// this may mean the tag failed to verify- all previous plaintext
-		// returned must be considered faked and invalid
-		return nil, nil, errors.New("decryption failed")
-	}
-
-	workingiv := C.GoBytes(unsafe.Pointer(&ctx.ctx.iv[0]), C.int(ctx.cipherCtx.IVSize()))
-	return outbuf[:outlen], workingiv, nil
 }
 
 func (ctx *encryptionCipherCtx) SetPadding(pad int) error {
