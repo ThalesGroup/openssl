@@ -262,7 +262,7 @@ int X_EVP_CIPHER_CTX_encrypting(const EVP_CIPHER_CTX *ctx) {
 	return ctx->encrypt;
 }
 
-int EVP_CIPHER_CTX_iv(const EVP_CIPHER_CTX *ctx) {
+const unsigned char *EVP_CIPHER_CTX_iv(const EVP_CIPHER_CTX *ctx) {
     return ctx->iv;
 }
 
