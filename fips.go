@@ -16,10 +16,11 @@ package openssl
 
 /*
 #include <openssl/ssl.h>
-*/
+
 import "C"
 import "runtime"
 
+// This function has been removed in openssl 3
 // FIPSModeSet enables a FIPS 140-2 validated mode of operation.
 // https://wiki.openssl.org/index.php/FIPS_mode_set()
 func FIPSModeSet(mode bool) error {
@@ -37,3 +38,4 @@ func FIPSModeSet(mode bool) error {
 	}
 	return nil
 }
+*/
